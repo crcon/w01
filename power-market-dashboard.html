@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电力中长期与现货市场衔接机制</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #0F172A;
+            color: #F8FAFC;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 400px; }
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #38BDF8, #34D399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .timeline-node {
+            width: 20px; height: 20px; border-radius: 50%;
+            background: #38BDF8; border: 4px solid #0F172A;
+            box-shadow: 0 0 0 2px #38BDF8;
+        }
+    </style>
+</head>
+<body class="antialiased scroll-smooth">
+
+    <!-- Chosen Palette: Deep Night & Neon (Navy #0F172A, Slate #1E293B, Sky Blue #38BDF8, Emerald #34D399, Rose #FB7185, Purple #A855F7, Orange #F97316) -->
+    <!-- Application Structure Plan: A linear narrative dashboard guiding the user from macro concepts down to micro execution mathematics and physical strategies. 
+        Section 1 (Hero): Core challenge. 
+        Section 2 (Functions): Long-term vs Spot roles. 
+        Section 3 (Timeline): Temporal resolution. 
+        Section 4 (Contracts): CfD vs Physical. 
+        Section 5 (Decomposition): Interactive curve shape simulation. 
+        Section 6 (Settlement): Interactive calculator for R = Qc*Pc + (Qa-Qc)*Ps. 
+        Section 7 (Over-generation Analysis): A 3-column qualitative breakdown of the economic and administrative consequences of exceeding targets.
+        Section 8 (Physical Strategies): A visually organized 5-block grid detailing the hardware and technical methods to eliminate deviation risks, providing closure to the market mechanics challenge. -->
+    <!-- Visualization & Content Choices: 
+        1. Functions/Timeline/Contracts -> HTML styled elements without SVG.
+        2. Curve Mapping & Settlement -> Chart.js Line/Bar Charts with interactive controls.
+        3. Over-generation (New) -> Organize/Compare -> 3-column styled glass-panel cards with distinct border colors (Emerald/Rose/Purple) to represent Reward/Penalty/Administrative consequences. Unicode icons.
+        4. Physical Strategies (New) -> Organize -> Asymmetric flex/grid layout. Top block for overview, followed by individual strategy cards grouped by control target (Qa vs Qc). -> No SVG. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <header class="relative pt-24 pb-16 px-6 lg:px-12 text-center border-b border-slate-700 glass-panel">
+        <div class="max-w-4xl mx-auto">
+            <div class="inline-block px-4 py-1 rounded-full bg-slate-800 text-sky-400 font-bold text-sm mb-6 tracking-widest uppercase border border-sky-900">
+                电力市场经济学核心
+            </div>
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-black mb-6 leading-tight">
+                中长期市场与现货市场的<br><span class="gradient-text">协同与衔接机制</span>
+            </h1>
+            <p class="text-lg md:text-xl text-slate-300 leading-relaxed font-light">
+                电能不可大规模经济存储的物理特性，决定了其交易必须与实际运行在时间上解耦。本指南将带您深入解析如何通过市场体系设计，实现“金融避险”与“物理调度”的完美剥离与统一，以及如何利用物理手段抹平结算偏差。
+            </p>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-16 space-y-24">
+
+        <section id="positioning">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">一、 市场功能定位的“道”与“术”</h2>
+                <p class="text-slate-400 max-w-2xl mx-auto text-lg">在电力市场体系中，中长期与现货两类市场承担着截然不同但又高度互补的功能职责。</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="glass-panel p-8 rounded-2xl border-t-4 border-sky-400 transform transition hover:-translate-y-1">
+                    <div class="text-5xl mb-6">🛡️</div>
+                    <h3 class="text-2xl font-bold text-white mb-2">中长期市场 (The "Dao")</h3>
+                    <div class="bg-sky-900/50 text-sky-300 text-sm font-bold px-3 py-1 rounded inline-block mb-6">稳定预期 / 风险管理</div>
+                    <ul class="space-y-4 text-slate-300">
+                        <li class="flex items-start"><span class="text-sky-400 mr-3 text-lg">▸</span>提前数月甚至数年锁定大部分电量（70%-90%）。</li>
+                        <li class="flex items-start"><span class="text-sky-400 mr-3 text-lg">▸</span>规避极端的现货价格波动风险，锁定核心收益。</li>
+                        <li class="flex items-start"><span class="text-sky-400 mr-3 text-lg">▸</span>为发电侧提供投资回报确定性，为用电侧稳定成本核算。</li>
+                    </ul>
+                </div>
+                
+                <div class="glass-panel p-8 rounded-2xl border-t-4 border-emerald-400 transform transition hover:-translate-y-1">
+                    <div class="text-5xl mb-6">⚡</div>
+                    <h3 class="text-2xl font-bold text-white mb-2">现货市场 (The "Shu")</h3>
+                    <div class="bg-emerald-900/50 text-emerald-300 text-sm font-bold px-3 py-1 rounded inline-block mb-6">发现价格 / 资源优化</div>
+                    <ul class="space-y-4 text-slate-300">
+                        <li class="flex items-start"><span class="text-emerald-400 mr-3 text-lg">▸</span>通过短至15分钟的集中竞价，利用边际成本定价。</li>
+                        <li class="flex items-start"><span class="text-emerald-400 mr-3 text-lg">▸</span>解决新能源预测误差与突发负荷跃升带来的系统物理偏差。</li>
+                        <li class="flex items-start"><span class="text-emerald-400 mr-3 text-lg">▸</span>引导灵活性资源（燃气、储能）在最需要的时间点提供电力。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="timeline" class="py-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">二、 交易时序的继起性</h2>
+                <p class="text-slate-400 max-w-2xl mx-auto text-lg">电力市场在时间维度上形成了一个逐级逼近实际运行的交易体系，从长期计划稳步过渡到短期优化与实时平衡。</p>
+            </div>
+
+            <div class="relative max-w-4xl mx-auto">
+                <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-700 -translate-y-1/2 hidden md:block"></div>
+                <div class="flex flex-col md:flex-row justify-between items-stretch gap-6 relative z-10">
+                    
+                    <div class="glass-panel p-6 rounded-xl flex-1 text-center border border-slate-600 relative">
+                        <div class="timeline-node absolute -top-3 left-1/2 -translate-x-1/2 hidden md:block"></div>
+                        <div class="text-sky-400 font-bold text-xl mb-2">中长期交易</div>
+                        <div class="text-xs bg-slate-800 text-slate-300 py-1 px-2 rounded mb-3 inline-block">年 / 月 / 周</div>
+                        <p class="text-sm text-slate-400">提前锁定大部分物理电量基盘，建立市场稳定器。</p>
+                    </div>
+
+                    <div class="text-3xl text-slate-500 font-bold self-center md:hidden">⬇</div>
+
+                    <div class="glass-panel p-6 rounded-xl flex-1 text-center border border-slate-600 relative">
+                        <div class="timeline-node absolute -top-3 left-1/2 -translate-x-1/2 hidden md:block" style="background:#34D399; box-shadow: 0 0 0 2px #34D399;"></div>
+                        <div class="text-emerald-400 font-bold text-xl mb-2">日前现货市场</div>
+                        <div class="text-xs bg-slate-800 text-slate-300 py-1 px-2 rounded mb-3 inline-block">运行前一日</div>
+                        <p class="text-sm text-slate-400">形成次日机组组合、发电计划及日前出清价格。</p>
+                    </div>
+
+                    <div class="text-3xl text-slate-500 font-bold self-center md:hidden">⬇</div>
+
+                    <div class="glass-panel p-6 rounded-xl flex-1 text-center border border-slate-600 relative">
+                        <div class="timeline-node absolute -top-3 left-1/2 -translate-x-1/2 hidden md:block" style="background:#FB7185; box-shadow: 0 0 0 2px #FB7185;"></div>
+                        <div class="text-rose-400 font-bold text-xl mb-2">实时平衡市场</div>
+                        <div class="text-xs bg-slate-800 text-slate-300 py-1 px-2 rounded mb-3 inline-block">运行时刻</div>
+                        <p class="text-sm text-slate-400">最终解决风光预测误差，保证系统物理绝对平衡。</p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section id="contracts">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">三、 合约执行与物理调度解耦</h2>
+                <p class="text-slate-400 max-w-2xl mx-auto text-lg">中长期合同电量如何在现货市场中体现？现代集中式市场推崇“调度与结算解耦”。</p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                <div class="bg-slate-800/80 rounded-2xl p-8 border-l-8 border-sky-500 relative overflow-hidden">
+                    <div class="absolute right-0 top-0 text-9xl opacity-5 transform translate-x-4 -translate-y-4">📄</div>
+                    <div class="inline-block bg-sky-500/20 text-sky-300 px-3 py-1 rounded text-sm font-bold mb-4">主流模式</div>
+                    <h3 class="text-2xl font-bold text-white mb-4">差价合约 (CfD) 金融执行</h3>
+                    <p class="text-slate-300 mb-4 leading-relaxed">在集中式市场下，中长期合同不直接安排物理发电。所有机组统一进入现货市场竞价，由调度机构按“成本极小化”安排启停。</p>
+                    <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 mb-4">
+                        <strong class="text-sky-400">结算本质：</strong> 中长期合同仅用于差价结算财务账本。实际结算电价 = <span class="text-white">合同价 - 现货价</span>。
+                    </div>
+                    <p class="text-sm text-slate-400">突破物理壁垒：低效机组即使签了巨额售电合同，只要现货报价高便不会被调用；但它能在现货市场低价“买回”承诺电量履约，降低全社会发电成本。</p>
+                </div>
+
+                <div class="bg-slate-800/80 rounded-2xl p-8 border-l-8 border-slate-500 relative overflow-hidden">
+                    <div class="absolute right-0 top-0 text-9xl opacity-5 transform translate-x-4 -translate-y-4">⚙️</div>
+                    <div class="inline-block bg-slate-600/50 text-slate-300 px-3 py-1 rounded text-sm font-bold mb-4">过渡特征</div>
+                    <h3 class="text-2xl font-bold text-white mb-4">物理合约实物交收</h3>
+                    <p class="text-slate-300 mb-4 leading-relaxed">在分散式市场模式下，中长期合同电量需要进行真实的物理交收执行。合同电量这部分不参与现货市场竞价。</p>
+                    <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 mb-4">
+                        <strong class="text-slate-300">操作约束：</strong> 调度机构严格按照合同约定的电力曲线安排发电计划。发电企业仅对剩余容量报价。
+                    </div>
+                    <p class="text-sm text-slate-400">局限性：该模式要求电网结构绝对稳定、阻塞较少，在现代高比例波动性新能源市场中，系统灵活性严重受限，正逐步被淘汰。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="curve-decomposition" class="glass-panel p-6 md:p-10 rounded-2xl">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-white">四、 曲线分解机制：能量到功率的映射</h2>
+                <p class="text-slate-400 max-w-3xl mx-auto text-lg">中长期交易以“总电量(MWh)”为标的，而现货市场需针对每15分钟的“电力(MW)”定价。将电量揉碎平摊，即曲线分解。分解曲线的形状，直接决定了市场主体在现货暴露的风险敞口。</p>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-4 mb-8">
+                <button id="btn-flat" class="px-6 py-2 rounded-lg font-bold bg-sky-600 text-white hover:bg-sky-500 transition-colors">均分曲线 (全天平铺)</button>
+                <button id="btn-peak" class="px-6 py-2 rounded-lg font-bold bg-slate-700 text-slate-300 hover:bg-emerald-600 hover:text-white transition-colors">峰谷平曲线 (贴合负荷)</button>
+                <button id="btn-solar" class="px-6 py-2 rounded-lg font-bold bg-slate-700 text-slate-300 hover:bg-rose-600 hover:text-white transition-colors">光伏定制曲线 (倒U型)</button>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="curveChart"></canvas>
+            </div>
+
+            <div class="mt-8 bg-slate-800/80 p-6 rounded-xl border border-slate-700">
+                <h4 class="text-xl font-bold text-white mb-2" id="curve-title">均分曲线 (Flat Profile)</h4>
+                <p class="text-slate-300" id="curve-desc">发电商承诺全天24小时均匀输出相同功率。在傍晚社会用电高峰期（现货电价飙升时），如果实际物理发不出足够的电，必须在现货市场高价买电填补缺口，面临巨大偏差财务惩罚风险。</p>
+            </div>
+        </section>
+
+        <section id="settlement" class="glass-panel p-6 md:p-10 rounded-2xl border-t-8 border-sky-500">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-white">五、 偏差处理：双轨制结算机制模拟</h2>
+                <p class="text-slate-400 max-w-3xl mx-auto text-lg">物理世界总有预测偏差（负荷波动、风光误差）。双轨制结算公式巧妙地让现货市场成为了惩罚与激励的指挥棒。</p>
+            </div>
+
+            <div class="grid lg:grid-cols-12 gap-10">
+                <div class="lg:col-span-5 space-y-8 bg-slate-900/50 p-6 rounded-xl border border-slate-700">
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <label class="text-sm font-bold text-slate-300">中长期合同电量 (Qc)</label>
+                            <span id="val-qc" class="text-sky-400 font-mono font-bold">100 MWh</span>
+                        </div>
+                        <input type="range" id="inp-qc" min="50" max="200" value="100" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-500">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <label class="text-sm font-bold text-slate-300">中长期合同价格 (Pc)</label>
+                            <span id="val-pc" class="text-sky-400 font-mono font-bold">400 ¥/MWh</span>
+                        </div>
+                        <input type="range" id="inp-pc" min="200" max="800" value="400" step="10" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-500">
+                    </div>
+
+                    <div class="pt-6 border-t border-slate-700">
+                        <div class="flex justify-between mb-2">
+                            <label class="text-sm font-bold text-slate-300">实际物理发电量 (Qa)</label>
+                            <span id="val-qa" class="text-emerald-400 font-mono font-bold">110 MWh</span>
+                        </div>
+                        <input type="range" id="inp-qa" min="50" max="200" value="110" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+                        <p class="text-xs text-slate-500 mt-2">试着将其调至 110 (超发) 或 90 (少发) 观察后续影响。</p>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <label class="text-sm font-bold text-slate-300">现货市场价格 (Ps)</label>
+                            <span id="val-ps" class="text-rose-400 font-mono font-bold">800 ¥/MWh</span>
+                        </div>
+                        <input type="range" id="inp-ps" min="50" max="1500" value="800" step="10" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-rose-500">
+                    </div>
+                </div>
+
+                <div class="lg:col-span-7 flex flex-col justify-between">
+                    <div class="bg-slate-900 p-6 rounded-xl border border-slate-700 mb-6 text-center shadow-inner">
+                        <div class="font-mono text-xl md:text-2xl font-bold tracking-wider mb-2">
+                            R = <span class="text-sky-400">Qc×Pc</span> + <span class="text-emerald-400">(Qa-Qc)</span>×<span class="text-rose-400">Ps</span>
+                        </div>
+                        <div class="text-sm text-slate-500 uppercase tracking-widest">双轨制财务结算引擎</div>
+                    </div>
+
+                    <div class="chart-container" style="height: 250px; max-height: 250px;">
+                        <canvas id="formulaChart"></canvas>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mt-6">
+                        <div class="bg-slate-800 p-4 rounded-xl border-l-4 border-sky-500">
+                            <div class="text-xs text-slate-400 mb-1">锁定基本盘 (雷打不动)</div>
+                            <div id="out-base" class="text-2xl font-black text-sky-400 font-mono">¥ 40,000</div>
+                        </div>
+                        <div class="bg-slate-800 p-4 rounded-xl border-l-4 border-emerald-500" id="dev-box">
+                            <div class="text-xs text-slate-400 mb-1" id="dev-label">现货偏差奖惩</div>
+                            <div id="out-dev" class="text-2xl font-black text-emerald-400 font-mono">+ ¥ 8,000</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-4 rounded-xl text-center bg-slate-900 border border-slate-700">
+                        <span class="text-slate-400 mr-4">总收益/支出 (R)</span>
+                        <span id="out-total" class="text-3xl font-black text-white font-mono">¥ 48,000</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="over-generation">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">六、 现货超发：是奖还是罚？</h2>
+                <p class="text-slate-400 max-w-3xl mx-auto text-lg">在纯现货机制下，公式层面上超发（如超发 10 MWh）并非直接罚款，而是将这部分电量拿去现货市场“博弈”。实际后果取决于三类截然不同的场景：</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Card 1: Economic Reward -->
+                <div class="glass-panel p-8 rounded-2xl border-t-8 border-emerald-500 flex flex-col h-full hover:bg-slate-800/80 transition-colors">
+                    <div class="text-4xl mb-4">📈</div>
+                    <h3 class="text-xl font-bold text-white mb-3">1. 经济奖励 (高电价期)</h3>
+                    <div class="bg-emerald-900/40 text-emerald-300 text-xs px-2 py-1 rounded inline-block mb-4 self-start">市场红利</div>
+                    <p class="text-slate-300 flex-grow text-sm leading-relaxed mb-4">
+                        如果电网正处用电高峰，现货价格 (Ps) 飙升（如 800元/MWh）。你超发的电量刚好起到了支撑电网的作用。
+                    </p>
+                    <div class="bg-slate-900/80 p-3 rounded text-sm border border-slate-700">
+                        <span class="block text-slate-400 mb-1">结算结果:</span>
+                        <span class="text-emerald-400 font-mono font-bold">+ 10 MWh × 800 = 8,000 元</span>
+                        <span class="block text-xs mt-1 text-slate-300">此时超发等于获得巨额额外奖励。</span>
+                    </div>
+                </div>
+
+                <!-- Card 2: Economic Penalty -->
+                <div class="glass-panel p-8 rounded-2xl border-t-8 border-rose-500 flex flex-col h-full hover:bg-slate-800/80 transition-colors">
+                    <div class="text-4xl mb-4">📉</div>
+                    <h3 class="text-xl font-bold text-white mb-3">2. 经济惩罚 (低/负电价)</h3>
+                    <div class="bg-rose-900/40 text-rose-300 text-xs px-2 py-1 rounded inline-block mb-4 self-start">市场反噬</div>
+                    <p class="text-slate-300 flex-grow text-sm leading-relaxed mb-4">
+                        如果光伏狂发，电网不需要多余电量，现货价格暴跌（如 50元 或 -100元/MWh）。若您的发电成本是 300元，此时卖出即亏损。
+                    </p>
+                    <div class="bg-slate-900/80 p-3 rounded text-sm border border-slate-700">
+                        <span class="block text-slate-400 mb-1">负电价后果:</span>
+                        <span class="text-rose-400 font-mono font-bold">10 MWh × (-100) = -1,000 元</span>
+                        <span class="block text-xs mt-1 text-slate-300">你还要倒贴钱求电网用你的电。</span>
+                    </div>
+                </div>
+
+                <!-- Card 3: Admin Penalty -->
+                <div class="glass-panel p-8 rounded-2xl border-t-8 border-purple-500 flex flex-col h-full hover:bg-slate-800/80 transition-colors">
+                    <div class="text-4xl mb-4">⚖️</div>
+                    <h3 class="text-xl font-bold text-white mb-3">3. 调度考核罚款</h3>
+                    <div class="bg-purple-900/40 text-purple-300 text-xs px-2 py-1 rounded inline-block mb-4 self-start">行政纪律 / 两个细则</div>
+                    <p class="text-slate-300 flex-grow text-sm leading-relaxed mb-4">
+                        除了“市场盈亏”，若这 10 MWh 是没有调度指令的**“私自超发”**，会破坏电网频率平衡，威胁安全运行。
+                    </p>
+                    <div class="bg-slate-900/80 p-3 rounded text-sm border border-slate-700">
+                        <span class="block text-slate-400 mb-1">偏差考核:</span>
+                        <span class="text-purple-400 font-bold">直接从总电费中扣减重罚</span>
+                        <span class="block text-xs mt-1 text-slate-300">偏离指令范围的超发，罚款往往远超现货差价。</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="strategies">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">七、 物理与技术对冲：如何消灭偏差？</h2>
+                <p class="text-slate-400 max-w-3xl mx-auto text-lg">要避免现货价格的剧烈惩罚，核心目标是让 <span class="text-emerald-400 font-mono">实际物理量 (Qa)</span> 无限趋近于 <span class="text-sky-400 font-mono">合同约定曲线 (Qc)</span>。以下是最硬核的物理控制手段：</p>
+            </div>
+
+            <!-- Top Summary Card -->
+            <div class="glass-panel p-6 rounded-2xl border border-slate-600 mb-8 flex items-center justify-center text-center bg-slate-800/50">
+                <div class="text-lg text-slate-300">
+                    <span class="text-emerald-400 font-bold">配置储能、多能互补、负荷控制</span> 旨在精准操控 <strong>Qa</strong>；<br class="md:hidden">
+                    <span class="text-sky-400 font-bold">提升气象预测精度</span> 旨在精准设定 <strong>Qc</strong>。<br>
+                    <span class="text-white font-black mt-2 inline-block">两者双管齐下，将 (Qa - Qc) 归零，彻底免除高价偏差惩罚！</span>
+                </div>
+            </div>
+
+            <!-- Grid of Strategies -->
+            <div class="grid lg:grid-cols-2 gap-6">
+                <!-- Energy Storage -->
+                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 flex gap-4 hover:border-emerald-500 transition-colors">
+                    <div class="text-4xl flex-shrink-0 mt-1">🔋</div>
+                    <div>
+                        <h4 class="text-lg font-bold text-white mb-2">配置物理储能系统 (最直接“蓄水池”)</h4>
+                        <p class="text-sm text-slate-400 mb-2">在物理电网和结算电表之间增加缓冲池（如电化学、抽蓄）。</p>
+                        <ul class="text-xs text-slate-300 space-y-1">
+                            <li><strong class="text-rose-400">少发时：</strong>新能源出力不足时，迅速<strong>放电</strong>补缺，避开现货高价惩罚。</li>
+                            <li><strong class="text-emerald-400">超发时：</strong>面临负电价时，迅速<strong>充电</strong>避免贱卖，留到晚高峰现货高价卖出。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Multi-Energy -->
+                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 flex gap-4 hover:border-emerald-500 transition-colors">
+                    <div class="text-4xl flex-shrink-0 mt-1">🔄</div>
+                    <div>
+                        <h4 class="text-lg font-bold text-white mb-2">多能互补 / 源网荷储一体化</h4>
+                        <p class="text-sm text-slate-400 mb-2">将不同物理特性的电源“捆绑”，实现物理自我平衡。</p>
+                        <ul class="text-xs text-slate-300 space-y-1">
+                            <li><strong class="text-sky-400">水风光火互济：</strong>如白天光伏强时，水电减力蓄水；无风无光时，水电/火电快速爬坡。</li>
+                            <li>对外始终输出一条非常平滑、精准对标合同的物理曲线。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Demand Response -->
+                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 flex gap-4 hover:border-orange-400 transition-colors">
+                    <div class="text-4xl flex-shrink-0 mt-1">🏭</div>
+                    <div>
+                        <h4 class="text-lg font-bold text-white mb-2">需求侧响应与柔性负荷控制</h4>
+                        <p class="text-sm text-slate-400 mb-2">用电侧避免偏差的硬核手段：直接控制“用电设备”。</p>
+                        <ul class="text-xs text-slate-300 space-y-1">
+                            <li><strong class="text-orange-400">工业调节：</strong>预测明日风光不足(高电价)，工厂物理拉闸停掉非核心产线。</li>
+                            <li><strong class="text-orange-400">楼宇控制：</strong>通过物联网微调商业综合体空调(如调高1度)或控制充电桩功率。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- VPP -->
+                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 flex gap-4 hover:border-sky-500 transition-colors">
+                    <div class="text-4xl flex-shrink-0 mt-1">🌐</div>
+                    <div>
+                        <h4 class="text-lg font-bold text-white mb-2">虚拟电厂 (Virtual Power Plant)</h4>
+                        <p class="text-sm text-slate-400 mb-2">非真实电厂，而是一套强大的通信与物理控制系统。</p>
+                        <ul class="text-xs text-slate-300 space-y-1">
+                            <li>将分散在各地的屋顶光伏、小储能、充电桩、居民空调等聚合。</li>
+                            <li>发现大电网偏离目标时，VPP下发指令，成百上千小设备同时增减功率，瞬间拉平曲线偏差。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Prediction (Full Width) -->
+                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 flex gap-4 lg:col-span-2 hover:border-purple-400 transition-colors">
+                    <div class="text-4xl flex-shrink-0 mt-1">🛰️</div>
+                    <div>
+                        <h4 class="text-lg font-bold text-white mb-2">提升极端天气物理探测与预测精度</h4>
+                        <p class="text-sm text-slate-400 mb-2">从源头消灭偏差：预测越准，Qc 的申报就越完美。</p>
+                        <ul class="text-xs text-slate-300 space-y-1">
+                            <li>高度依赖物理传感器的部署：在电站周边高密度安装<strong>测风塔、测光仪、天空云相机</strong>。</li>
+                            <li>结合气象大模型，在日前阶段极其精准地预测次日风速和云层移动，使申报的 <strong>Qc 无限接近最终的 Qa</strong>。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center py-10 border-t border-slate-800 text-slate-500 text-sm mt-12 bg-slate-900">
+        <p>基于《电力现货市场实务》理论分析框架与物理应对策略构建</p>
+    </footer>
+
+    <script>
+        const wrapText = (text, maxLength = 16) => {
+            if (typeof text !== 'string' || text.length <= maxLength) return text;
+            const words = text.split(''); 
+            const lines = [];
+            let currentLine = '';
+            for(let i=0; i<words.length; i++){
+                if((currentLine + words[i]).length > maxLength){
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                } else {
+                    currentLine += words[i];
+                }
+            }
+            if(currentLine) lines.push(currentLine);
+            return lines;
+        };
+
+        const globalTooltipConfig = {
+            callbacks: {
+                title: function(tooltipItems) {
+                    const item = tooltipItems[0];
+                    let label = item.chart.data.labels[item.dataIndex];
+                    if (Array.isArray(label)) {
+                        return label.join('');
+                    } else {
+                        return label;
+                    }
+                }
+            }
+        };
+
+        Chart.defaults.color = '#94A3B8';
+        Chart.defaults.font.family = "'Noto Sans SC', sans-serif";
+
+        const timeLabels = Array.from({length: 24}, (_, i) => `${String(i).padStart(2, '0')}:00`);
+        const dataFlat = Array(24).fill(100);
+        const dataPeak = [40, 40, 40, 40, 40, 40, 80, 100, 150, 180, 180, 150, 100, 100, 100, 120, 160, 200, 220, 200, 150, 80, 40, 40];
+        const dataSolar = [0, 0, 0, 0, 0, 10, 50, 120, 200, 250, 280, 300, 300, 280, 220, 150, 60, 10, 0, 0, 0, 0, 0, 0];
+
+        const ctxCurve = document.getElementById('curveChart').getContext('2d');
+        const curveChart = new Chart(ctxCurve, {
+            type: 'line',
+            data: {
+                labels: timeLabels.map(l => wrapText(l)),
+                datasets: [{
+                    label: '分解功率 (MW)',
+                    data: dataFlat,
+                    borderColor: '#38BDF8',
+                    backgroundColor: 'rgba(56, 189, 248, 0.2)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: globalTooltipConfig
+                },
+                scales: {
+                    y: { beginAtZero: true, max: 350, grid: { color: 'rgba(148, 163, 184, 0.1)' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        const btnFlat = document.getElementById('btn-flat');
+        const btnPeak = document.getElementById('btn-peak');
+        const btnSolar = document.getElementById('btn-solar');
+        const curveTitle = document.getElementById('curve-title');
+        const curveDesc = document.getElementById('curve-desc');
+
+        const resetCurveBtns = () => {
+            [btnFlat, btnPeak, btnSolar].forEach(btn => {
+                btn.classList.remove('bg-sky-600', 'bg-emerald-600', 'bg-rose-600', 'text-white');
+                btn.classList.add('bg-slate-700', 'text-slate-300');
+            });
+        };
+
+        btnFlat.addEventListener('click', () => {
+            resetCurveBtns();
+            btnFlat.classList.remove('bg-slate-700', 'text-slate-300');
+            btnFlat.classList.add('bg-sky-600', 'text-white');
+            curveChart.data.datasets[0].data = dataFlat;
+            curveChart.data.datasets[0].borderColor = '#38BDF8';
+            curveChart.data.datasets[0].backgroundColor = 'rgba(56, 189, 248, 0.2)';
+            curveChart.update();
+            curveTitle.innerText = "均分曲线 (Flat Profile)";
+            curveDesc.innerText = "发电商承诺全天24小时均匀输出相同功率。在傍晚社会用电高峰期（现货电价飙升时），如果实际物理发不出足够的电，必须在现货市场高价买电填补缺口，面临巨大偏差财务惩罚风险。";
+        });
+
+        btnPeak.addEventListener('click', () => {
+            resetCurveBtns();
+            btnPeak.classList.remove('bg-slate-700', 'text-slate-300');
+            btnPeak.classList.add('bg-emerald-600', 'text-white');
+            curveChart.data.datasets[0].data = dataPeak;
+            curveChart.data.datasets[0].borderColor = '#34D399';
+            curveChart.data.datasets[0].backgroundColor = 'rgba(52, 211, 153, 0.2)';
+            curveChart.update();
+            curveTitle.innerText = "峰谷平曲线 (Peak/Valley Profile)";
+            curveDesc.innerText = "更为贴近人类真实生活工业活动的负荷曲线。在9:00-18:00或傍晚配置高峰电力。这帮助市场主体在现货高价时段锁定更多收益基盘，大幅降低敞口风险。";
+        });
+
+        btnSolar.addEventListener('click', () => {
+            resetCurveBtns();
+            btnSolar.classList.remove('bg-slate-700', 'text-slate-300');
+            btnSolar.classList.add('bg-rose-600', 'text-white');
+            curveChart.data.datasets[0].data = dataSolar;
+            curveChart.data.datasets[0].borderColor = '#FB7185';
+            curveChart.data.datasets[0].backgroundColor = 'rgba(251, 113, 133, 0.2)';
+            curveChart.update();
+            curveTitle.innerText = "定制化光伏曲线 (Solar Specific)";
+            curveDesc.innerText = "针对新能源无法控出力的特点，签这种“倒U型”定制曲线。如果光伏企业签均分曲线，夜间无光时将被巨额现货高价电费击穿；定制曲线可最大化对冲物理特性的风险。";
+        });
+
+        const inpQc = document.getElementById('inp-qc');
+        const inpPc = document.getElementById('inp-pc');
+        const inpQa = document.getElementById('inp-qa');
+        const inpPs = document.getElementById('inp-ps');
+        
+        const valQc = document.getElementById('val-qc');
+        const valPc = document.getElementById('val-pc');
+        const valQa = document.getElementById('val-qa');
+        const valPs = document.getElementById('val-ps');
+
+        const outBase = document.getElementById('out-base');
+        const outDev = document.getElementById('out-dev');
+        const outTotal = document.getElementById('out-total');
+        const devBox = document.getElementById('dev-box');
+        const devLabel = document.getElementById('dev-label');
+
+        const ctxFormula = document.getElementById('formulaChart').getContext('2d');
+        const formulaChart = new Chart(ctxFormula, {
+            type: 'bar',
+            data: {
+                labels: [wrapText('结算财务组成')],
+                datasets: [
+                    { label: '中长期基盘收益', data: [40000], backgroundColor: '#38BDF8', stack: 'Stack 0' },
+                    { label: '现货偏差结算', data: [8000], backgroundColor: '#34D399', stack: 'Stack 0' }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: globalTooltipConfig
+                },
+                scales: {
+                    x: { stacked: true, grid: { color: 'rgba(148, 163, 184, 0.1)' } },
+                    y: { stacked: true, grid: { display: false } }
+                }
+            }
+        });
+
+        function formatCurrency(num) {
+            return '¥ ' + num.toLocaleString();
+        }
+
+        function updateCalculator() {
+            const qc = parseFloat(inpQc.value);
+            const pc = parseFloat(inpPc.value);
+            const qa = parseFloat(inpQa.value);
+            const ps = parseFloat(inpPs.value);
+
+            valQc.innerText = qc + ' MWh';
+            valPc.innerText = pc + ' ¥/MWh';
+            valQa.innerText = qa + ' MWh';
+            valPs.innerText = ps + ' ¥/MWh';
+
+            const baseR = qc * pc;
+            const diffQ = qa - qc;
+            const devR = diffQ * ps;
+            const totalR = baseR + devR;
+
+            outBase.innerText = formatCurrency(baseR);
+            
+            if (devR >= 0) {
+                outDev.innerText = '+ ' + formatCurrency(devR);
+                outDev.className = "text-2xl font-black text-emerald-400 font-mono";
+                devBox.className = "bg-slate-800 p-4 rounded-xl border-l-4 border-emerald-500";
+                formulaChart.data.datasets[1].backgroundColor = '#34D399';
+                devLabel.innerText = "现货超发收益";
+            } else {
+                outDev.innerText = '- ' + formatCurrency(Math.abs(devR));
+                outDev.className = "text-2xl font-black text-rose-400 font-mono";
+                devBox.className = "bg-slate-800 p-4 rounded-xl border-l-4 border-rose-500";
+                formulaChart.data.datasets[1].backgroundColor = '#FB7185';
+                devLabel.innerText = "现货少发支出/惩罚";
+            }
+
+            outTotal.innerText = formatCurrency(totalR);
+
+            formulaChart.data.datasets[0].data = [baseR];
+            formulaChart.data.datasets[1].data = [devR];
+            formulaChart.update();
+        }
+
+        [inpQc, inpPc, inpQa, inpPs].forEach(el => el.addEventListener('input', updateCalculator));
+        updateCalculator();
+
+    </script>
+</body>
+</html>
